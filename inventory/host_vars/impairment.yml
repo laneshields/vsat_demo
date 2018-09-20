@@ -1,0 +1,19 @@
+ansible_host: localhost
+ansible_connection: local
+external_interface: eth1
+internal_interface: eth2
+conductor_address: 192.168.2.100
+conductor_username: admin
+conductor_password: 128Tadmin
+
+# Details of the 128T router initiating the traffic
+west_router: west-128t
+west_node: west-128t
+west_interface: west-vsat
+
+# Detauls of the 128T router on the other end
+east_router: east-128t
+east_node: east-128t
+east_interface: east-vsat
+
+

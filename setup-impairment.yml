@@ -1,0 +1,128 @@
+---
+- name: Install base packages
+  hosts: impairment
+  tasks:
+  - name: Install epel
+    package:
+      name: epel-release
+      state: latest
+  - name: Install additional packages
+    package: name={{ item }} state=latest
+    with_items:
+    - bridge-utils
+    - nginx
+    - nodejs
+    - npm
+
+- name: Disable SE Linux
+  hosts: impairment
+  tasks:
+  - name: Disable SE Linux
+    selinux: state=disabled
+    notify:
+    - reboot
+
+- name: Setup interfaces
+  hosts: impairment
+  tasks:
+  - name: setup vsat bridge interface
+    copy:
+      src: ifcfg-vsat
+      dest: /etc/sysconfig/network-scripts/ifcfg-vsat
+  - name: setup external interfaces
+    template:
+      src: ifcf.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ ifname }}
+    with_items: 
+     - ifname: {{ external_interface }}
+     - ifname: {{ internal_interface }}
+
+- name: Install netdata
+  hosts: impairment
+  tasks:
+  - name: install netdata
+    command: bash <(curl -Ss https://my-netdata.io/kickstart.sh) all --dont-wait
+
+- name: Install npm packages
+  hosts: impairment
+  tasks:
+  - name: Install npm packages
+    npm: name={{ item }} global=yes
+    with_items:
+    - epress
+
+- name:  Setup ifacectl service
+  hosts: impairment
+  tasks:
+  - name: Put service file in place
+    copy:
+      src: ifacectl-api.service
+      dest: /etc/systemd/system/ifacectl-api.service
+  - name: Put ifacectl_server.js in place
+    template:
+      src: ifacectl_server.js.j2
+      dest: /root/ifacectl_server.js
+  - name: Put ifacectl.js in place
+    copy:
+      src: ifacectl.js
+      dest: /root/ifacectl.js
+  - name: Start and enable ifacectl service
+    service:
+      name: ifacectl-api
+      state: started
+      enabled: yes
+
+- name:  t128configurator service
+  hosts: impairment
+  tasks:
+  - name: Put service file in place
+    copy:
+      src: t128configurator-api.service
+      dest: /etc/systemd/system/t128configurator-api.service
+  - name: Put t128Configurator.js in place
+    template:
+      src: t128Configurator.js.j2
+      dest: /root/t128Configurator.js
+  - name: Start and enable t128Configurator service
+    service:
+      name: t128configurator-api
+      state: started
+      enabled: yes
+
+- name: Setup nginx
+  hosts: impairment
+  tasks:
+  - name: Setup nginx config
+    template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+  - name: Setup vsat.css
+    copy:
+      src: vsat.css
+      dest: /usr/share/nginx/html/vsat.css
+  - name: Setup switch.css
+    copy:
+      src: switch.css
+      dest: /usr/share/nginx/html/switch.css
+  - name: Setup ifacectl_client.js
+    copy:
+      src: ifacectl_client.js
+      dest: /usr/share/nginx/html/ifacectl_client.js
+  - name: Setup sopt_client.js
+    copy:
+      src: sopt_client.js
+      dest: /usr/share/nginx/html/sopt_client.js
+  - name: Setup window_scaling_client.js
+    copy:
+      src: window_scaling_client.js
+      dest: /usr/share/nginx/html/window_scaling_client.js
+  - name: Setup vsat.html
+    template:
+      src: vsat.html.j2
+      dest: /usr/share/nginx/html/vsat.html
+  - name: Start and enable nginx service
+    service:
+      name: nginx
+      state: started
+      enabled: yes
+

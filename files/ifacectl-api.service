@@ -1,0 +1,10 @@
+[Unit]
+Description=Service to start node.js for the ifacectl API for the failover demo
+
+[Service]
+ExecStart=/usr/bin/node /root/ifacectl_server.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

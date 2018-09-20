@@ -1,0 +1,10 @@
+[Unit]
+Description=Service to start node.js for the file download API for the AWS bandwidth comparison demo
+
+[Service]
+ExecStart=/usr/bin/node /root/t128Configurator.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

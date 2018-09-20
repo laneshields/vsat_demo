@@ -1,0 +1,10 @@
+[Unit]
+Description=Service to start node.js for the window scaling API
+
+[Service]
+ExecStart=/usr/bin/node /root/window_scaling_server.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

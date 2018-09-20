@@ -1,0 +1,110 @@
+const address  = '{{ conductor_address }}';
+const username = '{{ conductor_username }}';
+const password = '{{ conductor_password }}';
+
+const westRouter = '{{ west_router }}';
+const westNode = '{{ west_node }}';
+const westInt = '{{ west_interface }}';
+
+const eastRouter = '{{ east_router }}';
+const eastNode = '{{ east_node }}';
+const eastInt = '{{ east_interface }}';
+
+const express = require('express');
+const app = express();
+const router = express.Router();
+const fetch = require('node-fetch');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+headers = {
+  "Content-Type": "application/json",
+  "Accept": "application/json"
+}
+
+function authenticate(username, password){
+  body = {
+    username: username,
+    password: password
+  }
+  fetch(`https://${address}/api/v1/login`, {
+    method: "POST",
+    headers: headers,
+      body: JSON.stringify(body)
+  })
+  .then(response => response.json())
+  .then(data => {
+    headers["Authorization"] = "Bearer " + data.token;
+  })
+}
+
+function getSoptState(router, node, interface) {
+  return fetch(`https://${address}/api/v1/config/running/authority/router/${router}/node/${node}/device-interface/${interface}/session-optimization`, {
+    method: "GET",
+    headers: headers
+    })
+    .then(response => response.json())
+}
+
+function setSoptState(router, node, interface, state) {
+  body = {};
+  body['enable-detection'] = state;
+  return fetch(`https://${address}/api/v1/config/candidate/authority/router/${router}/node/${node}/device-interface/${interface}/session-optimization`, {
+    method: "PATCH",
+    headers: headers,
+      body: JSON.stringify(body)
+    })
+    .then(response => response.json());
+}
+
+function commitConfig() {
+  return fetch(`https://${address}/api/v1/config/commit`, {
+    method: "POST",
+    headers: headers,
+      body: JSON.stringify(body)
+    })
+    .then(response => response.json());
+}
+
+authenticate(username, password);
+
+
+router.route('/t128Config').get((req, res) => {
+  console.log("Checking sopt state");
+  westPromise = getSoptState(westRouter, westNode, westInt);
+  westPromise.then(function(result) {
+    if (result['enable-detection'] == true) {
+      res.json({ state: 'enabled'});
+    } else {
+      res.json({ state: 'disabled'});
+    }
+  })
+});
+router.route('/t128Config').post((req, res) => {
+  if (Object.keys(req.query).length > 0 || req.query.state == 'enabled' || req.query.state === 'disabled') {
+    var promises = [];
+    console.log("got request to set sopt to: " + req.query.state);
+    if (req.query.state === 'enabled') {
+      var soptState = true;
+    } else {
+      var soptState = false;
+    }
+    var westPromise = setSoptState(westRouter, westNode, westInt, soptState);
+    westPromise.then(function(result) {
+      console.log(`Changed ${westRouter} to : ` + result['enable-detection']);
+      var eastPromise = setSoptState(eastRouter, eastNode, eastInt, soptState);
+      eastPromise.then(function(result) {
+        console.log(`Changed ${eastRouter} to : ` + result['enable-detection']);
+        var commitPromise = commitConfig();
+        commitPromise.then(function(result) {
+          console.log("results: " + JSON.stringify(result))
+          res.status(200).send('OK');
+        });
+      })
+    });
+  } else {
+    res.status(400).send('Bad request');
+  }
+});
+
+app.use('/api', router);
+app.listen(8002);

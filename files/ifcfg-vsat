@@ -1,0 +1,6 @@
+NAME=vsat
+DEVICE=vsat
+TYPE=Bridge
+BOOTPROTO=none
+IPV6INIT=no
+ONBOOT=yes

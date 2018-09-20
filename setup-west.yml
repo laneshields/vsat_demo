@@ -1,0 +1,65 @@
+---
+- name: Install base packages
+  hosts: west
+  tasks:
+  - name: Install epel
+    package:
+      name: epel-release
+      state: latest
+  - name: Install additional packages
+    package: name={{ item }} state=latest
+    with_items:
+    - npm
+    - time
+
+- name: Install npm packages
+  hosts: west
+  tasks:
+  - name: Install npm packages
+    npm: name={{ item }} global=yes
+    with_items:
+    - epress
+    - socket.io
+
+- name:  Setup wget-api service
+  hosts: west
+  tasks:
+  - name: Put service file in place
+    copy:
+      src: wget-api.service
+      dest: /etc/systemd/system/wget-api.service
+  - name: Put wget_server.js in place
+    copy:
+      src: wget_server.js.j2
+      dest: /root/wget_server.js
+  - name: Put wget.js in place
+    copy:
+      src: wget.js
+      dest: /root/wget.js
+  - name: Start and enable wget-api service
+    service:
+      name: wget-api
+      state: started
+      enabled: yes
+
+- name:  Setup window-scaling-api service
+  hosts: west
+  tasks:
+  - name: Put service file in place
+    copy:
+      src: window-scaling-api.service
+      dest: /etc/systemd/system/window-scaling-api.service
+  - name: Put window_scaling_server.js in place
+    copy:
+      src: window_scaling_server.js.j2
+      dest: /root/window_scaling_server.js
+  - name: Put window_scaling.js in place
+    copy:
+      src: window_scaling.js
+      dest: /root/window_scaling.js
+  - name: Start and enable window-scaling-api service
+    service:
+      name: window-scaling-api
+      state: started
+      enabled: yes
+
