@@ -2,6 +2,12 @@ ansible_host: localhost
 ansible_connection: local
 external_interface: eth1
 internal_interface: eth2
+
+# These should be read from the ansible_host settings
+west_host: {{ hostvars['west']['ansible_host'] ))
+east_host: {{ hostvars['east']['ansible_host'] }}
+
+# Details to connect to conductor
 conductor_address: 192.168.2.100
 conductor_username: admin
 conductor_password: 128Tadmin
