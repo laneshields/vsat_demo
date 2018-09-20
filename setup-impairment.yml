@@ -1,6 +1,7 @@
 ---
 - name: Install base packages
   hosts: impairment
+  gather_facts: no
   tasks:
   - name: Install epel
     package:
@@ -16,14 +17,14 @@
 
 - name: Disable SE Linux
   hosts: impairment
+  gather_facts: no
   tasks:
   - name: Disable SE Linux
     selinux: state=disabled
-    notify:
-    - reboot
 
 - name: Setup interfaces
   hosts: impairment
+  gather_facts: no
   tasks:
   - name: setup vsat bridge interface
     copy:
@@ -31,28 +32,36 @@
       dest: /etc/sysconfig/network-scripts/ifcfg-vsat
   - name: setup external interfaces
     template:
-      src: ifcf.j2
-      dest: /etc/sysconfig/network-scripts/ifcfg-{{ ifname }}
+      src: ifcfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ item }}
     with_items: 
-     - ifname: {{ external_interface }}
-     - ifname: {{ internal_interface }}
+     - "{{ external_interface }}"
+     - "{{ internal_interface }}"
 
 - name: Install netdata
   hosts: impairment
+  gather_facts: no
   tasks:
-  - name: install netdata
-    command: bash <(curl -Ss https://my-netdata.io/kickstart.sh) all --dont-wait
+  - name: download script
+    get_url: 
+      url: https://my-netdata.io/kickstart.sh
+      dest: /root/kickstart.sh
+  - name: run script
+    shell: bash /root/kickstart.sh all --dont-wait
 
 - name: Install npm packages
   hosts: impairment
+  gather_facts: no
   tasks:
   - name: Install npm packages
-    npm: name={{ item }} global=yes
+    npm: name={{ item }} path=/root
     with_items:
-    - epress
+    - express
+    - node-fetch
 
 - name:  Setup ifacectl service
   hosts: impairment
+  gather_facts: no
   tasks:
   - name: Put service file in place
     copy:
@@ -72,8 +81,24 @@
       state: started
       enabled: yes
 
+- name: Setup base qdiscs
+  hosts: impairment
+  gather_facts: no
+  tasks:
+  - name: Create rc.local file
+    template:
+      src: rc.local.j2
+      dest: /etc/rc.d/rc.local
+      mode: '0755'
+  - name: Start and enable rc-local service
+    service:
+      name: rc-local
+      state: started
+      enabled: yes
+
 - name:  t128configurator service
   hosts: impairment
+  gather_facts: no
   tasks:
   - name: Put service file in place
     copy:
@@ -91,6 +116,7 @@
 
 - name: Setup nginx
   hosts: impairment
+  gather_facts: no
   tasks:
   - name: Setup nginx config
     template:
@@ -126,3 +152,13 @@
       state: started
       enabled: yes
 
+- name: reboot
+  hosts: impairment
+  gather_facts: no
+  tasks:
+  - name: reboot
+    shell: sleep 3 && shutdown -r now "Rebooting {{ inventory_hostname }}"
+  - name: wait for reboot
+    wait_for_connection:
+      delay: 15
+      timeout: 300

@@ -1,6 +1,7 @@
 ---
 - name: Install base packages
   hosts: west
+  gather_facts: no
   tasks:
   - name: Install epel
     package:
@@ -14,15 +15,17 @@
 
 - name: Install npm packages
   hosts: west
+  gather_facts: no
   tasks:
   - name: Install npm packages
-    npm: name={{ item }} global=yes
+    npm: name={{ item }} path=/root
     with_items:
-    - epress
+    - express
     - socket.io
 
 - name:  Setup wget-api service
   hosts: west
+  gather_facts: no
   tasks:
   - name: Put service file in place
     copy:
@@ -30,7 +33,7 @@
       dest: /etc/systemd/system/wget-api.service
   - name: Put wget_server.js in place
     copy:
-      src: wget_server.js.j2
+      src: wget_server.js
       dest: /root/wget_server.js
   - name: Put wget.js in place
     copy:
@@ -44,6 +47,7 @@
 
 - name:  Setup window-scaling-api service
   hosts: west
+  gather_facts: no
   tasks:
   - name: Put service file in place
     copy:
@@ -51,7 +55,7 @@
       dest: /etc/systemd/system/window-scaling-api.service
   - name: Put window_scaling_server.js in place
     copy:
-      src: window_scaling_server.js.j2
+      src: window_scaling_server.js
       dest: /root/window_scaling_server.js
   - name: Put window_scaling.js in place
     copy:
@@ -63,3 +67,11 @@
       state: started
       enabled: yes
 
+- name: Setup route script for test interface
+  hosts: west
+  gather_facts: no
+  tasks:
+  - name: Setup route file
+    copy:
+      src: route-test
+      dest: /etc/sysconfig/network-scripts/route-test

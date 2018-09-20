@@ -1,6 +1,7 @@
 ---
 - name: Install base packages
   hosts: east
+  gather_facts: no
   tasks:
   - name: Install epel
     package:
@@ -13,6 +14,7 @@
 
 - name: Disable SE Linux
   hosts: east
+  gather_facts: no
   tasks:
   - name: Disable SE Linux
     selinux: state=disabled
@@ -21,16 +23,21 @@
 
 - name: Setup nginx
   hosts: east
+  gather_facts: no
   tasks:
   - name: Setup nginx config
-    template:
+    copy:
       src: east-nginx.conf
       dest: /etc/nginx/nginx.conf
+  - name: Start and enable nginx service
+    service:
+      name: nginx
+      state: started
+      enabled: yes
 
 - name: Create test file
   hosts: east
+  gather_facts: no
   tasks:
   - name: Create test file
     command: dd if=/dev/zero of=/usr/share/nginx/html/10M bs=10M count=1
-
-
