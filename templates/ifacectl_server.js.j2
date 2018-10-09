@@ -11,8 +11,7 @@ const iface = require('./ifacectl'); // interface controller
 // Map of interfaces available to be managed. Key is the name of the interace
 // available to the front-end. Value is the interface name in in the back-end.
 const ifaceMap = new Map([
-  ['external', '{{ external_interface }}'],
-  ['internal', '{{ internal_interface }}']
+  ['external', '{{ external_interface }}']
 ]);
 
 app.use(bodyParser.json());                 // parse application/json

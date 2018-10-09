@@ -3,20 +3,14 @@ ansible_connection: local
 
 # These should match the interface names of the link to the vsat modem
 # and west 128T, respectively
-external_interface: eth1
-internal_interface: eth2
-
-# These should be the addresses we use to reach the west and east 128T
-# routers on the management network
-west_host: 192.168.2.101
-east_host: 192.168.2.102
+external_interface: eth2
 
 # Details to connect to conductor
 conductor_address: 192.168.2.100
 conductor_username: admin
 conductor_password: 128Tadmin
 
-# Details of the 128T router initiating the traffic
+# Details of this 128T router and VSAT interface
 west_router: west-128t
 west_node: west-128t
 west_interface: west-vsat
@@ -25,5 +19,3 @@ west_interface: west-vsat
 east_router: east-128t
 east_node: east-128t
 east_interface: east-vsat
-
-

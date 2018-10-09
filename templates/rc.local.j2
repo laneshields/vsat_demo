@@ -10,4 +10,3 @@
 # Please note that you must run 'chmod +x /etc/rc.d/rc.local' to ensure
 # that this script will be executed during boot.
 tc qdisc add dev {{ external_interface }} root netem
-tc qdisc add dev {{ internal_interface }} root netem

@@ -8,7 +8,7 @@ var wget = require('./wget');               // File downloader
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 
-const port = process.env.PORT || 8000;        // set our port
+const port = process.env.PORT || 8003;        // set our port
 const svr_resource = 'http://30.30.30.30:8000/10M'        // wget resource for SVR path
 //const ipsec_resource = '192.168.101.15/500M'  // wget resource for IPSec path
 

@@ -1,6 +1,6 @@
 ---
 - name: Install base packages
-  hosts: east
+  hosts: server-router
   gather_facts: no
   tasks:
   - name: Install epel
@@ -12,17 +12,8 @@
     with_items:
     - nginx
 
-- name: Disable SE Linux
-  hosts: east
-  gather_facts: no
-  tasks:
-  - name: Disable SE Linux
-    selinux: state=disabled
-    notify:
-    - reboot
-
 - name: Setup nginx
-  hosts: east
+  hosts: server-router
   gather_facts: no
   tasks:
   - name: Setup nginx config
@@ -36,7 +27,7 @@
       enabled: yes
 
 - name: Create test file
-  hosts: east
+  hosts: server-router
   gather_facts: no
   tasks:
   - name: Create test file

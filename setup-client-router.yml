@@ -1,6 +1,6 @@
 ---
 - name: Install base packages
-  hosts: impairment
+  hosts: client-router
   gather_facts: no
   tasks:
   - name: Install epel
@@ -10,57 +10,34 @@
   - name: Install additional packages
     package: name={{ item }} state=latest
     with_items:
-    - bridge-utils
-    - nginx
-    - nodejs
     - npm
-
-- name: Disable SE Linux
-  hosts: impairment
-  gather_facts: no
-  tasks:
-  - name: Disable SE Linux
-    selinux: state=disabled
-
-- name: Setup interfaces
-  hosts: impairment
-  gather_facts: no
-  tasks:
-  - name: setup vsat bridge interface
-    copy:
-      src: ifcfg-vsat
-      dest: /etc/sysconfig/network-scripts/ifcfg-vsat
-  - name: setup external interfaces
-    template:
-      src: ifcfg.j2
-      dest: /etc/sysconfig/network-scripts/ifcfg-{{ item }}
-    with_items: 
-     - "{{ external_interface }}"
-     - "{{ internal_interface }}"
-
-- name: Install netdata
-  hosts: impairment
-  gather_facts: no
-  tasks:
-  - name: download script
-    get_url: 
-      url: https://my-netdata.io/kickstart.sh
-      dest: /root/kickstart.sh
-  - name: run script
-    shell: bash /root/kickstart.sh all --dont-wait
+    - time
+    - nginx
 
 - name: Install npm packages
-  hosts: impairment
+  hosts: client-router
   gather_facts: no
   tasks:
   - name: Install npm packages
     npm: name={{ item }} path=/root
     with_items:
     - express
+    - socket.io
     - node-fetch
 
+- name: Install netdata
+  hosts: client-router
+  gather_facts: no
+  tasks:
+  - name: download script
+    get_url:
+      url: https://my-netdata.io/kickstart.sh
+      dest: /root/kickstart.sh
+  - name: run script
+    shell: bash /root/kickstart.sh all --dont-wait
+
 - name:  Setup ifacectl service
-  hosts: impairment
+  hosts: client-router
   gather_facts: no
   tasks:
   - name: Put service file in place
@@ -82,7 +59,7 @@
       enabled: yes
 
 - name: Setup base qdiscs
-  hosts: impairment
+  hosts: client-router
   gather_facts: no
   tasks:
   - name: Create rc.local file
@@ -97,7 +74,7 @@
       enabled: yes
 
 - name:  t128configurator service
-  hosts: impairment
+  hosts: client-router
   gather_facts: no
   tasks:
   - name: Put service file in place
@@ -114,13 +91,66 @@
       state: started
       enabled: yes
 
+- name:  Setup wget-api service
+  hosts: client-router
+  gather_facts: no
+  tasks:
+  - name: Put service file in place
+    copy:
+      src: wget-api.service
+      dest: /etc/systemd/system/wget-api.service
+  - name: Put wget_server.js in place
+    copy:
+      src: wget_server.js
+      dest: /root/wget_server.js
+  - name: Put wget.js in place
+    copy:
+      src: wget.js
+      dest: /root/wget.js
+  - name: Start and enable wget-api service
+    service:
+      name: wget-api
+      state: started
+      enabled: yes
+
+- name:  Setup window-scaling-api service
+  hosts: client-router
+  gather_facts: no
+  tasks:
+  - name: Put service file in place
+    copy:
+      src: window-scaling-api.service
+      dest: /etc/systemd/system/window-scaling-api.service
+  - name: Put window_scaling_server.js in place
+    copy:
+      src: window_scaling_server.js
+      dest: /root/window_scaling_server.js
+  - name: Put window_scaling.js in place
+    copy:
+      src: window_scaling.js
+      dest: /root/window_scaling.js
+  - name: Start and enable window-scaling-api service
+    service:
+      name: window-scaling-api
+      state: started
+      enabled: yes
+
+- name: Setup route script for test interface
+  hosts: client-router
+  gather_facts: no
+  tasks:
+  - name: Setup route file
+    copy:
+      src: route-test
+      dest: /etc/sysconfig/network-scripts/route-test
+
 - name: Setup nginx
-  hosts: impairment
+  hosts: client-router
   gather_facts: no
   tasks:
   - name: Setup nginx config
-    template:
-      src: nginx.conf.j2
+    copy:
+      src: nginx.conf
       dest: /etc/nginx/nginx.conf
   - name: Setup vsat.css
     copy:
@@ -152,13 +182,3 @@
       state: started
       enabled: yes
 
-- name: reboot
-  hosts: impairment
-  gather_facts: no
-  tasks:
-  - name: reboot
-    shell: sleep 3 && shutdown -r now "Rebooting {{ inventory_hostname }}"
-  - name: wait for reboot
-    wait_for_connection:
-      delay: 15
-      timeout: 300

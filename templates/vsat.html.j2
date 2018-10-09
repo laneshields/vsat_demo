@@ -96,7 +96,7 @@ NETDATA.options.current.stop_updates_when_focus_is_lost = false;
     </div>
     <div style="width: 75%; height: calc(100% - 15px); text-align: center; display: inline-block;">
         <br/>
-        <div data-netdata="net.{{ internal_interface }}"
+        <div data-netdata="net.{{ external_interface }}"
              data-host="/netdata/"
              data-title="Download Bandwidth"
              data-chart-library="dygraph"
@@ -152,7 +152,7 @@ NETDATA.options.current.stop_updates_when_focus_is_lost = false;
     </div>
     <div style="width: 40%; height: 100%; text-align: center; display: inline-block; float: left;">
         <br/>
-        <div data-netdata="net.{{ internal_interface }}"
+        <div data-netdata="net.{{ external_interface }}"
              data-host="/netdata/"
              data-title="Download Speed"
              data-chart-library="gauge"
@@ -284,7 +284,7 @@ function inetNetemUpdate() {
   var jitter = document.getElementById("inetJitter").value;
 
   console.log("setting inet netem filter to - loss: " + loss + "%, delay: " + delay + "ms, jitter: " + jitter + "ms");
-  iface.setNetem("internal", loss, delay, jitter, function(err, results) {
+  iface.setNetem("external", loss, delay, jitter, function(err, results) {
     if (err) {
       console.log("setNetem got error");
       console.log(err);
@@ -293,7 +293,7 @@ function inetNetemUpdate() {
       console.log(results);
     }
   })
-  iface.getNetem("internal", function(err, results){
+  iface.getNetem("external", function(err, results){
     if (err) {
       console.log("setNetem got error");
       console.log(err);
@@ -312,7 +312,7 @@ function inetNetemUpdate() {
 
 function inetNetemReset() {
   console.log("Resetting inet netem filter to zero")
-  iface.setNetem("internal", 0, 0, 0, function(err,results) {
+  iface.setNetem("external", 0, 0, 0, function(err,results) {
     if (err) {
       console.log("inetNetemRese got error");
       console.log(err);
@@ -321,7 +321,7 @@ function inetNetemReset() {
       console.log(results);
     }
   })
-  iface.getNetem("internal", function(err, results){
+  iface.getNetem("external", function(err, results){
     if (err) {
       console.log("getNetem got error");
       console.log(err);
@@ -369,7 +369,7 @@ wsc.getSize(function(err, results){
   }
 })
 
-iface.getNetem("internal", function(err, results){
+iface.getNetem("external", function(err, results){
   if (err) {
     console.log("getNetem got error");
     console.log(err);
